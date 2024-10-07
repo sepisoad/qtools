@@ -70,6 +70,7 @@ SQT relies on the following tools and open-source projects.
 - [lua files ystem](http://lunarmodules.github.io/luafilesystem)
 - [lua argparse](https://github.com/mpeterv/argparse)
 - [lua minifs](https://github.com/tst2005/lua-minifs/)
+- [lua strease](https://github.com/krai-me/strease)
 - [lua pretty print](https://github.com/jagt/pprint.lua)
 
 # Notes:

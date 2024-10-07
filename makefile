@@ -47,7 +47,14 @@ pak_create:
 		pak \
 		create \
 		-i ignore/quake/PAK/ \
-		-o ignore/mypak.PAK
+		-o ignore/mypak.pak
+
+pak_extract_me:
+	@./$(BIN) \
+		pak \
+		extract \
+		-i ignore/mypak.pak \
+		-o ignore/mypak/
 
 ### ===============================================
 lmp_info:
@@ -119,12 +126,22 @@ tex_decode:
 	@./$(BIN) \
 		tex \
 		decode \
-		-i ignore/WAD/gfx/*04awater1 \
+		-i ignore/WAD/gfx/city2_1 \
 		-p ignore/WAD/gfx/palette \
-		-o ignore/WAD/gfx/04awater1.xxxxx
+		-o ignore/GFX/WAD/city2_1.qoi
 
 tex_encode:
 	@./$(BIN) \
 		tex \
 		encode \
-		BRRRRRR
+		-i ignore/GFX/WAD/city2_1.qoi \
+		-p ignore/WAD/gfx/palette \
+		-o ignore/GFX/XWAD/city2_1
+
+tex_decode_me:
+	@./$(BIN) \
+		tex \
+		decode \
+		-i ignore/GFX/XWAD/city2_1 \
+		-p ignore/WAD/gfx/palette \
+		-o ignore/GFX/XWAD/city2_1.qoi

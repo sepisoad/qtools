@@ -1,9 +1,9 @@
 local fs = require('lfs')
 local mfs = require('libs.lua.minifs.minifs')
 local log = require('libs.lua.log.log')
+local str = require('libs.lua.str.str')
 
-
-local create_dir_if_doesnt_exist = function(p)
+local function create_dir_if_doesnt_exist (p)
   if not mfs.exists(p) then
     if not mfs.mkrdir(p) then
       log.err(string.format("failed to create extraction directory at '%s'", p))
@@ -12,7 +12,7 @@ local create_dir_if_doesnt_exist = function(p)
   end
 end
 
-local create_dir_for_file_path = function(p)
+local function create_dir_for_file_path (p)
   local sep = mfs.separator()
   local p2 = p:match(".*[" .. sep .. "]")
   if not mfs.exists(p2) then
@@ -20,13 +20,13 @@ local create_dir_for_file_path = function(p)
   end
 end
 
-local join_item_path = function(dir, item)
+local function join_item_path (dir, item)
   local full = mfs.join(dir, item)
   local base = mfs.dirname(full)
   return full, base
 end
 
-local get_file_disk_size = function(p)
+local function get_file_disk_size (p)
   if not mfs.exists(p) then
     log.err(string.format("failed to open '%s'", p))
     os.exit(1)
@@ -40,21 +40,28 @@ local get_file_disk_size = function(p)
   return attr.size
 end
 
-local list_files_in_dir = function(p)
+local function list_files_in_dir (p)
   if not mfs.exists(p) then
-    return nil
+    return {}
   end
 
   return mfs.rfiles(p, true)
 end
 
-local trim_path = function(p, p2)
+local function trim_path (p, p2)
   local p3, _ = string.gsub(p, p2, "")
   return p3
 end
 
-local read_file_data = function(p)
+local function read_file_data (p)
   return mfs.read(p)
+end
+
+local function file_name(path)
+  local x = mfs.filename(path)
+  local parts = str.split(x,".")
+  if #parts <= 1 or #parts > 2 then return path end
+  return parts[1], parts[2]
 end
 
 return {
@@ -65,4 +72,5 @@ return {
   list_files_in_dir = list_files_in_dir,
   read_file_data = read_file_data,
   trim_path = trim_path,
+  file_name = file_name
 }

@@ -12,9 +12,11 @@ local parser = argparse()
 parser:flag("-v --verbose", "show debug logs"):action(function ()
   _G.VERBOSE = true
 end)
+
 -- ==================================================================
 --  pak top command
 -- ==================================================================
+
 local pak = parser:command(
   "pak",
   "this command deals with the .PAK files"
@@ -73,6 +75,7 @@ end)
 -- ==================================================================
 --  lmp top command
 -- ==================================================================
+
 local lmp = parser:command(
   "lmp",
   "this command deals with the .LMP files"
@@ -121,6 +124,7 @@ end)
 -- ==================================================================
 --  wad top command
 -- ==================================================================
+
 local wad = parser:command(
   "wad",
   "this command deals with the .WAD files"
@@ -179,6 +183,7 @@ end)
 -- ==================================================================
 --  tex top command
 -- ==================================================================
+
 local tex = parser:command(
   "tex",
   "this command deals with the .TEX files"
@@ -221,7 +226,7 @@ tex_encode:action(function (args)
     print(tex_encode:get_help())
     os.exit(1)
   end
-  _tex.encode(args.input, args.output, args.palette)
+  _tex.encode(args.input, args.palette, args.output)
 end)
 
 parser:parse()

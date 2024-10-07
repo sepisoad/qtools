@@ -1,22 +1,12 @@
-require('libs.lua.app.types')
 local log = require('libs.lua.log.log')
-local paths = require('libs.lua.utils.paths')
+local xio = require('libs.lua.utils.io')
 local bits = require('libs.lua.utils.bits')
+local paths = require('libs.lua.utils.paths')
 
---- -----------------------------------------------
----@param p string
----@return file*
-local open_wad_file = function(p)
-  log.dbg(string.format("openning the .WAD file from '%s'", p))
+require('libs.lua.app.types')
 
-  local wad_f, err = io.open(p, "rb")
-  if not wad_f then
-    log.err(string.format("failed to open '%s'", p), err)
-    os.exit(1)
-  end
-
-  return wad_f
-end
+local read = bits.reader
+local write = bits.writer
 
 --- -----------------------------------------------
 ---@param file file*
@@ -24,14 +14,11 @@ end
 local load_wad_file_header = function(file)
   log.dbg("loading .WAD file header")
 
-  ---@type WadHeader
-  local header = {
-    Code = file:read(WadHeader_.Code),
-    ItemsCount = string.unpack("=i", file:read(WadHeader_.ItemsCount)),
-    Offset = string.unpack("=i", file:read(WadHeader_.Offset)),
+  return {
+    Code = read.string(file, #WadHeader._Magic),
+    ItemsCount = read.integer(file),
+    Offset = read.integer(file),
   }
-
-  return header
 end
 
 --- -----------------------------------------------
@@ -39,11 +26,10 @@ end
 local verify_wad_header = function(header)
   log.dbg("verifying .WAD file header")
 
-  if header.Code ~= WadHeader_.CODE or
+  if header.Code ~= WadHeader._Magic or
       header.ItemsCount <= 0 or
       header.Offset <= 0 then
-    log.err(string.format(".WAD file header is not valid"))
-    os.exit(1)
+    log.fatal(string.format(".WAD file header is not valid"))
   end
 end
 
@@ -69,13 +55,13 @@ local load_wad_items_header = function(file, wad_header)
   for index = 1, wad_header.ItemsCount do
     ---@type WadItemHeader
     local item = {
-      Position = string.unpack("=i", file:read(WadItemHeader_.Position)),
-      Size = string.unpack("=i", file:read(WadItemHeader_.Size)),
-      CompressedSize = string.unpack("=i", file:read(WadItemHeader_.CompressedSize)),
-      Type = string.unpack("=c1", file:read(WadItemHeader_.Type)),
-      CompressionType = string.unpack("=B", file:read(WadItemHeader_.CompressionType)),
-      Paddings = file:read(WadItemHeader_.Paddings),
-      Name = string.unpack("z", file:read(WadItemHeader_.Name)),
+      Position = read.integer(file),
+      Size = read.integer(file),
+      CompressedSize = read.integer(file),
+      Type = read.string(file, WadItemHeader._Type),
+      CompressionType = read.byte(file),
+      Paddings = read.bytes(file, WadItemHeader._Paddings),
+      Name = read.cstring(file, WadItemHeader._Name),
     }
 
     items[index] = item
@@ -183,20 +169,6 @@ local create_extraction_item_dir = function(p)
 end
 
 --- -----------------------------------------------
----@param p string
----@return file*
-local create_extracted_item_file = function(p)
-  log.dbg(string.format("creating .WAD item extraction file into '%s'", p))
-
-  local item_f, err = io.open(p, "wb")
-  if not item_f then
-    log.err(string.format("failed to create extracted item '%s'", p), err)
-    os.exit(1)
-  end
-  return item_f
-end
-
---- -----------------------------------------------
 ---@param file file*
 ---@param header WadItemHeader
 ---@return any
@@ -204,10 +176,9 @@ local read_wad_item_data = function(file, header)
   log.dbg("reading .WAD item data")
 
   file:seek("set", header.Position)
-  local data = file:read(header.Size)
+  local data = read.bytes(file, header.Size)
   if not data then
-    log.err(string.format("failed to read data from input .WAD item '%s'", header.Name))
-    os.exit(1)
+    log.fatal(string.format("failed to read data from input .WAD item '%s'", header.Name))
   end
 
   return data
@@ -220,9 +191,8 @@ end
 local save_item_data_to_file = function(file, data, path)
   log.dbg("saving .WAD data into file")
 
-  if not file:write(data) then
-    log.err(string.format("failed to write .WAD item data to output file '%s'", path))
-    os.exit(1)
+  if not write.all(file, data) then
+    log.fatal(string.format("failed to write .WAD item data to output file '%s'", path))
   end
 end
 
@@ -239,10 +209,9 @@ local extract_items = function(wad_file, headers, out_dir_path)
 
     local item_path, item_dir = get_extraction_file_path(out_dir_path, header.Name)
     create_extraction_item_dir(item_dir)
-    local item_file = create_extracted_item_file(item_path)
+    local item_file <close> = xio.open(item_path, "wb")
     local item_data = read_wad_item_data(wad_file, header)
     save_item_data_to_file(item_file, item_data, item_path)
-    item_file:close()
   end
 end
 
@@ -251,13 +220,12 @@ end
 --- ===============================================
 ---@param wad_file_path string
 local cmd_info = function(wad_file_path)
-  local wad_f = open_wad_file(wad_file_path)
+  local wad_f <close> = xio.open(wad_file_path, "rb")
   local wad_header = load_wad_file_header(wad_f)
   verify_wad_header(wad_header)
   seek_to_wad_items_header(wad_f, wad_header)
   local items_header = load_wad_items_header(wad_f, wad_header)
   print_wad_info(wad_file_path, wad_header, items_header)
-  wad_f:close()
 end
 
 --- ===============================================
@@ -265,13 +233,12 @@ end
 --- ===============================================
 ---@param wad_file_path string
 local cmd_list = function(wad_file_path)
-  local wad_f = open_wad_file(wad_file_path)
+  local wad_f <close> = xio.open(wad_file_path, "rb")
   local wad_header = load_wad_file_header(wad_f)
   verify_wad_header(wad_header)
   seek_to_wad_items_header(wad_f, wad_header)
   local items_header = load_wad_items_header(wad_f, wad_header)
   print_items_name(items_header)
-  wad_f:close()
 end
 
 --- ===============================================
@@ -280,14 +247,13 @@ end
 ---@param wad_file_path string
 ---@param out_dir_path string
 local cmd_extract = function(wad_file_path, out_dir_path)
-  local wad_f = open_wad_file(wad_file_path)
+  local wad_f <close> = xio.open(wad_file_path, "rb")
   local wad_header = load_wad_file_header(wad_f)
   verify_wad_header(wad_header)
   seek_to_wad_items_header(wad_f, wad_header)
   local items_header = load_wad_items_header(wad_f, wad_header)
   create_extraction_toplevel_dir(out_dir_path)
   extract_items(wad_f, items_header, out_dir_path)
-  wad_f:close()
 end
 
 --- ===============================================

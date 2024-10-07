@@ -22,14 +22,8 @@ WadItemType = {
 ---@field Code string        (4 bytes)
 ---@field ItemsCount integer (4 bytes)
 ---@field Offset integer     (4 bytes)
-WadHeader = {}
-
----@enum WadHeader_
-WadHeader_ = {
-  CODE = "WAD2",
-  Code = 4,
-  ItemsCount = 4,
-  Offset = 4,
+WadHeader = {
+  _Magic = "WAD2"
 }
 
 --- ===============================================
@@ -37,45 +31,33 @@ WadHeader_ = {
 --- ===============================================
 
 ---@class WadItemHeader
----@field Position integer
----@field Size integer
----@field CompressedSize integer
----@field Type WadItemType
----@field CompressionType string
----@field Paddings string
----@field Name string
-WadItemHeader = {}
+---@field Position integer        (4 bytes)
+---@field Size integer            (4 bytes)
+---@field CompressedSize integer  (4 bytes)
+---@field Type WadItemType        (1 bytes)
+---@field CompressionType integer (1 bytes)
+---@field Paddings string         (2 bytes)
+---@field Name string             (16 bytes)
+WadItemHeader = {
+  _Type = 1,
+  _CompressionType = 1,
+  _Paddings = 1,
+  _Name = 16,
+}
 
 ---@alias WadItemsHeader WadItemHeader[]
-
----@enum WadItemHeader_
-WadItemHeader_ = {
-  Position = 4,
-  Size = 4,
-  CompressedSize = 4,
-  Type = 1,
-  CompressionType = 1,
-  Paddings = 2,
-  Name = 16,
-}
 
 --- ===============================================
 --- TexHeader
 --- ===============================================
 
 ---@class TexHeader
----@field Name string
----@field Width integer
----@field Height integer
----@field Data any
-TexHeader = {}
-
----@enum TexHeader_
-TexHeader_ = {
-  Name = 16,
-  Width = 4,
-  Height = 4,
-  Data = "*"
+---@field Name string     (16 bytes)
+---@field Width integer   (4 bytes)
+---@field Height integer  (4 bytes)
+---@field Data any        (variable size)
+TexHeader = {
+  _Name = 16,
 }
 
 --- ===============================================
@@ -86,14 +68,9 @@ TexHeader_ = {
 ---@field Code string (4 bytes)
 ---@field Offset integer (4 bytes)
 ---@field Length integer (4 bytes)
-PakHeader = {}
-
----@enum PakHeader_
-PakHeader_ = {
-  CODE = "PACK",
-  Code = 4,
-  Offset = 4,
-  Length = 4,
+PakHeader = {
+  _Magic = "PACK",
+  _Size = 4 + 4 + 4
 }
 
 --- ===============================================
@@ -104,17 +81,12 @@ PakHeader_ = {
 ---@field Name string
 ---@field Position integer
 ---@field Length integer
-PakItemHeader = {}
-
----@alias PakItemsHeader PakItemHeader[]
-
----@enum PakItemHeader_
-PakItemHeader_ = {
-  Name = 56,
-  Position = 4,
-  Length = 4,
+PakItemHeader = {
+  _Name = 56,
+  _Size = 56 + 4 + 4
 }
 
+---@alias PakItemsHeader PakItemHeader[]
 
 --- ===============================================
 --- PakItemHeader
@@ -126,13 +98,6 @@ PakItemHeader_ = {
 ---@field Data any (buffer)
 LumpHeader = {}
 
----@enum LumpHeader_
-LumpHeader_ = {
-  Width = 4,
-  Height = 4,
-  Data = "*",
-}
-
 --- ===============================================
 --- RGBColor
 --- ===============================================
@@ -141,16 +106,11 @@ LumpHeader_ = {
 ---@field Red integer (1 byte unsigned, 0-255)
 ---@field Green integer (1 byte unsigned, 0-255)
 ---@field Blue integer (1 byte unsigned, 0-255)
-RGBColor = {}
+RGBColor = {
+  _Size = 3
+}
 
 ---@alias Colors RGBColor[]
-
----@enum RGBColor_
-RGBColor_ = {
-  Red = 1,
-  Green = 1,
-  Blue = 1,
-}
 
 --- ===============================================
 --- PaletteData

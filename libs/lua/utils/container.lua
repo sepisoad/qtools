@@ -1,4 +1,4 @@
-local get_container_files_mapping = function(container)
+local function get_container_files_mapping (container)
   local mapping = {}
   for _, item in pairs(container) do
     local file = item:match("([^/]+)$")
